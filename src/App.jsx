@@ -8,11 +8,12 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';  // i
 import FoodFind from './pages/foodfind';
 import Maintep from './pages/Maintep';
 import Recommend from './pages/recommend';
-
+import Navbar from './components/Navbar'; // 추가
 
 const App = () => {
   return (
     <Router>  {/* Router로 전체 애플리케이션을 감싸줍니다 */}
+      <Navbar />  {/* 모든 페이지에 공통으로 보이는 Navbar */}
       <Routes>  {/* Routes로 경로들을 설정 */}
         <Route path="/foodfind" element={<FoodFind />} />  {/* '/' 경로에서 FoodFind 컴포넌트를 표시 */}
         <Route path="/" element={<Maintep />} />  {/* '/' 경로에서 FoodFind 컴포넌트를 표시 */}

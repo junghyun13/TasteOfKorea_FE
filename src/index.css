@@ -1,25 +1,25 @@
 /* src/index.css */
+
+/* Tailwind 기본 스타일 */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-
-
+/* 루트 설정 */
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* 기본 링크 스타일 */
 a {
   font-weight: 500;
   color: #646cff;
@@ -29,19 +29,24 @@ a:hover {
   color: #535bf2;
 }
 
+/* 모바일 우선 스타일 */
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
+  display: block;
+  font-family: 'Arial', sans-serif;
   min-width: 320px;
   min-height: 100vh;
+  background-color: #242424;
+  color: rgba(255, 255, 255, 0.87);
 }
 
+/* 제목 크기 조정 */
 h1 {
-  font-size: 3.2em;
+  font-size: 2.5em;
   line-height: 1.1;
 }
 
+/* 버튼 스타일 */
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -61,6 +66,7 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+/* 라이트 모드에서 색상 조정 */
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
@@ -71,5 +77,32 @@ button:focus-visible {
   }
   button {
     background-color: #f9f9f9;
+  }
+}
+
+/* 반응형 모바일 대응 */
+@media (max-width: 768px) {
+  /* 작은 화면에서 제목 크기 조정 */
+  h1 {
+    font-size: 2em;
+  }
+
+  /* 버튼 크기와 패딩 조정 */
+  button {
+    padding: 0.5em 1em;
+    font-size: 0.9em;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 아주 작은 화면에서 제목 크기 조정 */
+  h1 {
+    font-size: 1.5em;
+  }
+
+  /* 더 작은 화면에서 버튼 크기 및 여백 조정 */
+  button {
+    padding: 0.4em 0.8em;
+    font-size: 0.8em;
   }
 }
