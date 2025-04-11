@@ -1,0 +1,22 @@
+{
+    "name": "tasteofkorea",  
+    "short_name": "tok",  
+    "description": "korea taste awesome PWA App",  
+    "start_url": "/",  
+    "display": "standalone",  
+    "background_color": "#ffffff",  
+    "theme_color": "#ffffff",  
+    "icons": [
+      {
+        "src": "/taste.jpg",  
+        "sizes": "192x192",  
+        "type": "image/jpg"  
+      },
+      {
+        "src": "/taste.jpg",  
+        "sizes": "512x512",  
+        "type": "image/jpg"  
+      }
+    ]
+  }
+  
