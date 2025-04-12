@@ -12,16 +12,14 @@ self.addEventListener('install', (event) => {
   );
 });
 
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      return cachedResponse || fetch(event.request);
-    })
-  );
+// fetch event
+self.addEventListener("fetch", (e) => {
+  console.log("[Service Worker] fetched resource " + e.request.url);
 });
 
   
-  self.addEventListener('activate', (event) => {
-    console.log('서비스 워커 활성화됨!');
-  });
+  // activate event
+self.addEventListener("activate", (e) => {
+  console.log("[Service Worker] actived", e);
+});
   

@@ -1,6 +1,22 @@
-<head>
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Taste of Korea</title>
+
+    <!-- PWA 관련 메타태그 -->
+    <meta name="theme-color" content="#ffffff" />
+
+    <!-- 아이콘 -->
+    <link rel="icon" href="/taste.jpg" />
+    <link rel="apple-touch-icon" href="/taste.jpg" />
+
+    <!-- PWA 매니페스트 연결 -->
+    <link rel="manifest" href="/manifest.webmanifest" />
   </head>
-  
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
