@@ -5,6 +5,7 @@ self.addEventListener('install', (event) => {
         '/',
         '/index.html',
         '/taste.jpg',      // public 폴더에 있는 파일 경로
+        '/manifest.webmanifest'
       ]).catch((error) => {
         console.error('캐시 추가 실패:', error);
       });
