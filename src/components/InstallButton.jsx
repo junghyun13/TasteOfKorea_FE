@@ -9,14 +9,16 @@ const InstallButton = () => {
       e.preventDefault(); // 자동 설치 배너 막기
       setDeferredPrompt(e); // 저장해두고 나중에 사용
       setShowInstall(true); // 버튼 표시
+      console.log('beforeinstallprompt 이벤트 발생'); // 이벤트 발생 여부 확인
     };
-
+  
     window.addEventListener('beforeinstallprompt', handler);
-
+  
     return () => {
       window.removeEventListener('beforeinstallprompt', handler);
     };
   }, []);
+  
 
   const handleInstall = () => {
     if (deferredPrompt) {
