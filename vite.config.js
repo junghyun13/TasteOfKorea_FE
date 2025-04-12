@@ -15,14 +15,14 @@ export default defineConfig({
         theme_color: '#ffffff', // 앱의 테마 색상
         icons: [
           {
-            src: '/taste.jpg', // 동일한 아이콘 경로
+            src: '/tastes.png', // 동일한 아이콘 경로
             sizes: '192x192', // 작은 크기 아이콘
-            type: 'image/jpg', // 파일 타입을 jpg로 수정
+            type: 'image/png', // 파일 타입을 jpg로 수정
           },
           {
-            src: '/taste.jpg', // 동일한 아이콘 경로
+            src: '/tastes.png', // 동일한 아이콘 경로
             sizes: '512x512', // 큰 크기 아이콘
-            type: 'image/jpg', // 파일 타입을 jpg로 수정
+            type: 'image/png', // 파일 타입을 jpg로 수정
           },
         ],
       },
