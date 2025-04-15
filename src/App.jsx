@@ -11,17 +11,19 @@ import Navbar from './components/Navbar'; // 추가
 
 const App = () => {
   return (
-    <>
-      <InstallButton /> {/* 여기에 설치 버튼 삽입 */}
-      <Router>  {/* Router로 전체 애플리케이션을 감싸줍니다 */}
-        <Navbar />  {/* 모든 페이지에 공통으로 보이는 Navbar */}
-        <Routes>  {/* Routes로 경로들을 설정 */}
-          <Route path="/foodfind" element={<FoodFind />} />
-          <Route path="/" element={<Maintep />} />
-          <Route path="/recommend" element={<Recommend />} />
-        </Routes>
+    <div className="w-full h-screen bg-white text-black flex flex-col">
+      <InstallButton />
+      <Router>
+        <Navbar />
+        <div className="flex-grow"> {/* 내부 페이지가 전체 높이에서 확장될 수 있도록 */}
+          <Routes>
+            <Route path="/foodfind" element={<FoodFind />} />
+            <Route path="/" element={<Maintep />} />
+            <Route path="/recommend" element={<Recommend />} />
+          </Routes>
+        </div>
       </Router>
-    </>
+    </div>
   );
 };
 
