@@ -143,17 +143,6 @@ const FoodDetails = ({ match }) => {
                   )}
                 </div>
 
-                <div className="mt-6">
-                  <h3 className="text-lg font-semibold text-orange-800 mb-2">Flavor Profile</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    {['spicy', 'sour', 'salty', 'oily'].map((flavor) => (
-                      <div className="flex items-center" key={flavor}>
-                        <span className="text-orange-700 mr-2 capitalize">{flavor}:</span>
-                        <div>{renderRating(food[flavor])}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
               </div>
             )}
 

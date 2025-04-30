@@ -81,19 +81,9 @@ const foodfind = () => {
 
   return (
     <div className="bg-orange-50 min-h-screen p-4 sm:p-6 relative">
-      <header className="flex items-center justify-between mb-6">
-        <button 
-          onClick={() => window.history.back()}
-          className="text-orange-600 hover:text-orange-700 flex items-center p-2 rounded-full transition-colors"
-        >
-          <ChevronLeft className="w-6 h-6 mr-1" />
-          <span className="text-sm">Go Back</span>
-        </button>
-      </header>
-
       <main className="max-w-md mx-auto">
-        <div className="bg-white rounded-2xl shadow-lg p-6 relative overflow-hidden">
-          <div className="absolute -top-10 -right-10 w-32 h-32 bg-orange-100 rounded-full opacity-50 z-0"></div>
+        <div className="bg-white rounded-2xl shadow-lg p-6 relative">
+          {/* Removed the circular shadow div that was here */}
           
           <div className="relative z-10">
             <h1 className="text-2xl font-bold text-orange-800 mb-4 text-center flex items-center justify-center">
@@ -152,19 +142,21 @@ const foodfind = () => {
                 <p className="text-lg text-orange-600">Korean Name: {foodDetails.koreanName}</p>
                 <p className="text-lg text-orange-600">English Name: {foodDetails.englishName}</p>
                 <p className="text-lg text-orange-600">
-                  Pronunciation : {foodDetails.pronunciation}</p>
+                  Pronunciation: {foodDetails.pronunciation}</p>
                   
-                
-                  <img src={foodDetails.imageLink} alt={foodDetails.englishName} onClick={goToDetailPage} // ✅ 이미지 클릭 시 이동
-className="mt-4 max-w-full h-48 object-cover rounded-xl shadow-md cursor-pointer hover:opacity-90 transition-opacity"
-/>
+                <img 
+                  src={foodDetails.imageLink} 
+                  alt={foodDetails.englishName} 
+                  onClick={goToDetailPage} // ✅ 이미지 클릭 시 이동
+                  className="mt-4 max-w-full h-48 object-cover rounded-xl shadow-md cursor-pointer hover:opacity-90 transition-opacity"
+                />
 
-<button
-  onClick={goToDetailPage} // ✅ 버튼 클릭 시 이동
-  className="mt-4 w-full px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
->
-  Food Details
-</button>
+                <button
+                  onClick={goToDetailPage} // ✅ 버튼 클릭 시 이동
+                  className="mt-4 w-full px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                >
+                  Food Details
+                </button>
               </div>
             )}
 

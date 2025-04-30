@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 const Navbar = () => {
   return (
-    <nav className="bg-orange-50 shadow-md py-2 px-4 flex justify-between items-center">
+    <nav className="bg-orange-50 py-2 px-4 flex justify-between items-center">
       <div className="flex items-center gap-2">
         {/* 로고 클릭 시 홈으로 이동 */}
         <Link to="/">
