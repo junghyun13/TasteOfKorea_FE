@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronLeft, Camera } from 'lucide-react';
+import { useNavigate } from 'react-router-dom'; // ✅ 라우터 훅 추가
 
 const foodfind = () => {
   const [file, setFile] = useState(null);
@@ -8,7 +9,8 @@ const foodfind = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const [foodDetails, setFoodDetails] = useState(null); // State for food details
+  const [foodDetails, setFoodDetails] = useState(null);
+  const navigate = useNavigate(); // ✅ 라우터 함수
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
@@ -30,7 +32,7 @@ const foodfind = () => {
     setError(null);
     setFoodName('');
     setConfidence(null);
-    setFoodDetails(null); // Reset food details on new submission
+    setFoodDetails(null);
 
     const formData = new FormData();
     formData.append('file', file);
@@ -49,7 +51,6 @@ const foodfind = () => {
       setFoodName(result.class);
       setConfidence(result.confidence);
 
-      // Fetch food details based on the predicted food name (e.g., '갈비구이')
       if (result.class) {
         const foodDetailsResponse = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/api/food/${result.id}`);
         if (!foodDetailsResponse.ok) {
@@ -57,7 +58,7 @@ const foodfind = () => {
         }
 
         const foodDetailsData = await foodDetailsResponse.json();
-        setFoodDetails(foodDetailsData); // Set the food details state
+        setFoodDetails({ ...foodDetailsData, id: result.id }); // ✅ id 포함 저장
       }
     } catch (error) {
       setError('An error occurred during prediction');
@@ -66,26 +67,20 @@ const foodfind = () => {
     }
   };
 
-  // Function to render star rating
-const renderRating = (rating) => {
-  const stars = [];
-  for (let i = 0; i < 5; i++) {
-    stars.push(
-      <span
-        key={i}
-        className={`text-yellow-500 text-3xl ${i < rating ? '' : 'opacity-50'}`}
-      >
-        {i < rating ? '★' : '☆'}
-      </span>
-    );
-  }
-  return stars;
-};
+  const goToDetailPage = () => {
+    const foodId = foodDetails?.id;
 
+  // foodId가 0일 때도 정상적으로 처리되도록 수정
+  if (foodId !== undefined) {
+    console.log(`Navigating to: /fooddetail/${foodId}`);
+    navigate(`/fooddetail/${foodId}`);
+  } else {
+    console.log("ID가 없습니다.");
+  }
+  };
 
   return (
     <div className="bg-orange-50 min-h-screen p-4 sm:p-6 relative">
-      {/* Header with Back Button and Title */}
       <header className="flex items-center justify-between mb-6">
         <button 
           onClick={() => window.history.back()}
@@ -96,10 +91,8 @@ const renderRating = (rating) => {
         </button>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-md mx-auto">
         <div className="bg-white rounded-2xl shadow-lg p-6 relative overflow-hidden">
-          {/* Decorative Orange Blob */}
           <div className="absolute -top-10 -right-10 w-32 h-32 bg-orange-100 rounded-full opacity-50 z-0"></div>
           
           <div className="relative z-10">
@@ -108,7 +101,6 @@ const renderRating = (rating) => {
               Food Image Prediction
             </h1>
 
-            {/* File Input with Custom Styling */}
             <label htmlFor="file-input" className="mb-4 w-full text-orange-500 cursor-pointer">
               {file ? "Selected File: " + file.name : "Select a file"}
               <input 
@@ -120,7 +112,6 @@ const renderRating = (rating) => {
               />
             </label>
 
-            {/* Image Preview */}
             {imagePreview && (
               <div className="mb-4 flex justify-center">
                 <img 
@@ -131,7 +122,6 @@ const renderRating = (rating) => {
               </div>
             )}
 
-            {/* Predict Button */}
             {file && (
               <button
                 onClick={handleSubmit}
@@ -149,7 +139,6 @@ const renderRating = (rating) => {
               </button>
             )}
 
-            {/* Prediction Result */}
             {foodName && confidence !== null && (
               <div className="mt-6 p-4 bg-orange-50 rounded-xl text-center">
                 <h2 className="text-xl font-semibold text-orange-800">Predicted Food: {foodName}</h2>
@@ -157,35 +146,28 @@ const renderRating = (rating) => {
               </div>
             )}
 
-            {/* Food Details */}
             {foodDetails && (
               <div className="mt-6 p-4 bg-white rounded-xl shadow-lg text-center">
-                <h3 className="text-xl font-semibold text-orange-800">Food Details: {foodDetails.romanizedName}</h3>
+                <h3 className="text-xl font-semibold text-orange-800">Food Details</h3>
                 <p className="text-lg text-orange-600">Korean Name: {foodDetails.koreanName}</p>
                 <p className="text-lg text-orange-600">English Name: {foodDetails.englishName}</p>
-                <p className="text-lg text-orange-600">Category: {foodDetails.category}</p>
-                <p className="text-lg text-orange-600">Calories: {foodDetails.calories} kcal</p>
-                <p className="text-lg text-orange-600">Made With: {foodDetails.madeWith}</p>
+                <p className="text-lg text-orange-600">
+                  Pronunciation : {foodDetails.pronunciation}</p>
+                  
+                
+                  <img src={foodDetails.imageLink} alt={foodDetails.englishName} onClick={goToDetailPage} // ✅ 이미지 클릭 시 이동
+className="mt-4 max-w-full h-48 object-cover rounded-xl shadow-md cursor-pointer hover:opacity-90 transition-opacity"
+/>
 
-
-                {/* Vegan Check */}
-                {foodDetails.category === 'meat' && (
-                  <p className="text-red-500 mt-4">This food is not suitable for vegans.</p>
-                )}
-
-                {/* Rating Stars */}
-                <div className="mt-4">
-                  <p>Spicy: {renderRating(foodDetails.spicy)}</p>
-                  <p>Sour: {renderRating(foodDetails.sour)}</p>
-                  <p>Salty: {renderRating(foodDetails.salty)}</p>
-                  <p>Oily: {renderRating(foodDetails.oily)}</p>
-                </div>
-                <a href={foodDetails.recipeLink} target="_blank" rel="noopener noreferrer" className="text-orange-600 underline">Recipe Video</a>
-                <img src={foodDetails.imgLink} alt={foodDetails.englishName} className="mt-4 max-w-full h-48 object-cover rounded-xl shadow-md" />
+<button
+  onClick={goToDetailPage} // ✅ 버튼 클릭 시 이동
+  className="mt-4 w-full px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+>
+  Food Details
+</button>
               </div>
             )}
 
-            {/* Error Message */}
             {error && (
               <p className="text-red-500 mt-4 bg-red-50 p-2 rounded-lg text-center">
                 {error}

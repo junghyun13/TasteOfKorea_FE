@@ -8,8 +8,9 @@ import FoodFind from './pages/foodfind';
 import Maintep from './pages/Maintep';
 import Recommend from './pages/recommend';
 import Navbar from './components/Navbar'; // 추가
+import FoodDetail from './pages/FoodDetails';
 
-const App = () => {
+function App() {
   return (
     <div className="w-full h-screen bg-white text-black flex flex-col">
       <InstallButton />
@@ -20,12 +21,13 @@ const App = () => {
             <Route path="/foodfind" element={<FoodFind />} />
             <Route path="/" element={<Maintep />} />
             <Route path="/recommend" element={<Recommend />} />
+            <Route path="/fooddetail/:id" element={<FoodDetail />} />
           </Routes>
         </div>
       </Router>
     </div>
   );
-};
+}
 
 
 export default App;

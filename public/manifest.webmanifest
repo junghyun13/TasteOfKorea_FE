@@ -4,8 +4,8 @@
     "description": "korea taste awesome PWA App",  
     "start_url": "/",  
     "display": "standalone",  
-    "background_color": "#ffffff",  
-    "theme_color": "#ffffff",  
+    "background_color": "#FFFFFF",  
+    "theme_color": "#FFFFFF",  
     "icons": [
       {
         "src": "/tastes.png",  
