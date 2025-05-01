@@ -15,12 +15,12 @@ export default defineConfig({
         theme_color: '#FFFFFF', // 앱의 테마 색상
         icons: [
           {
-            src: '/tastes.png', // 동일한 아이콘 경로
+            src: '/android-chrome-192x192.png', // 동일한 아이콘 경로
             sizes: '192x192', // 작은 크기 아이콘
             type: 'image/png', // 파일 타입을 jpg로 수정
           },
           {
-            src: '/tastes.png', // 동일한 아이콘 경로
+            src: '/android-chrome-512x512.png', // 동일한 아이콘 경로
             sizes: '512x512', // 큰 크기 아이콘
             type: 'image/png', // 파일 타입을 jpg로 수정
           },

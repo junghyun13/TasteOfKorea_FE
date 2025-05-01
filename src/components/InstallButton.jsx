@@ -38,11 +38,12 @@ const InstallButton = () => {
   return showInstall ? (
     <button
       onClick={handleInstall}
-      className="fixed bottom-5 right-5 px-4 py-2 bg-blue-600 text-white rounded shadow-md"
+      className="fixed bottom-4 right-4 px-2 py-1 text-sm bg-blue-600 text-white rounded shadow"
     >
-      앱 설치하기
+      앱 설치
     </button>
   ) : null;
+  
 };
 
 export default InstallButton;

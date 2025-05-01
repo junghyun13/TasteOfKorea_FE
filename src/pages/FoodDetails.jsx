@@ -192,29 +192,38 @@ const FoodDetails = ({ match }) => {
               </div>
             )}
 
-            {activeTab === 'map' && (
-              <div>
-                <h2 className="text-xl font-semibold text-orange-800 mb-4">Find {food.pronunciation} Restaurants</h2>
-                <div className="aspect-w-16 aspect-h-9">
-                  <iframe
-                    src={`https://www.google.com/maps/embed/v1/search?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&q=${encodeURIComponent(food.englishName + ' restaurants')}`}
-                    title={`${food.englishName} restaurants map`}
-                    className="w-full h-64 rounded-xl"
-                    allowFullScreen
-                  ></iframe>
-                </div>
-                <div className="mt-4">
-                  <a
-                    href={`https://www.google.com/maps/search/${encodeURIComponent(food.englishName + ' restaurants')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block w-full text-center bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition-colors"
-                  >
-                    Open in Google Maps
-                  </a>
-                </div>
-              </div>
-            )}
+{activeTab === 'map' && (
+  <div>
+    <div className="w-full overflow-x-auto rounded-xl" style={{ WebkitOverflowScrolling: 'touch' }}>
+  <div style={{ minWidth: '1024px', height: '75vh' }}>
+    <iframe
+      src={`https://map.naver.com/v5/search/${encodeURIComponent(food.koreanName + ' 한식당')}?c=14128565.6641455,4518243.3503569,13,0,0,0,dh`}
+      title={`${food.koreanName} 맛집 지도`}
+      style={{
+        width: '100%',
+        height: '100%',
+        border: 'none',
+      }}
+      allowFullScreen
+    ></iframe>
+  </div>
+</div>
+
+{/* 주황색 버튼 추가 */}
+<div className="mt-4">
+  <a
+    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(food.koreanName + ' 한식당')}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="block w-full text-center bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition-colors"
+  >
+    Open in Google Maps
+  </a>
+</div>
+  </div>
+)}
+
+
           </div>
         </div>
       </main>
