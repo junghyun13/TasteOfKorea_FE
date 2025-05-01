@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import InstallButton from './components/InstallButton'; // 추가
+//import InstallButton from './components/InstallButton'; // 추가
 import './index.css';  // 이 줄을 추가해야 Tailwind가 적용됩니다.
 import './App.css'
 import './pages/Maintep';
@@ -13,7 +13,7 @@ import FoodDetail from './pages/FoodDetails';
 function App() {
   return (
     <div className="w-full h-screen bg-white text-black flex flex-col">
-      <InstallButton />
+    
       <Router>
         <Navbar />
         <div className="flex-grow"> {/* 내부 페이지가 전체 높이에서 확장될 수 있도록 */}
