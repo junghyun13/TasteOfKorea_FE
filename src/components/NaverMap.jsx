@@ -1,24 +1,67 @@
-import React from 'react';
+import { useEffect, useState } from "react";
+import Maptest from "../pages/Maptest";
+import { useParams } from "react-router-dom"; // URL에서 recipeId를 받기 위해
 
-const NaverMapDirectionsEmbed = ({ food }) => {
-  const destination = encodeURIComponent(`${food.koreanName} 한식당`);
+const NaverMap = () => {
+  const { recipeId } = useParams();
+  const [currentMyLocation, setCurrentMyLocation] = useState({ lat: 0, lng: 0 });
+  const [restaurantData, setRestaurantData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // 위치 정보 가져오기
+  useEffect(() => {
+    const fetchLocation = () => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentMyLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (err) => {
+          console.error("위치 가져오기 실패", err);
+        }
+      );
+    };
+
+    fetchLocation(); // 위치 가져오기 호출
+  }, []); // 빈 배열이므로, 컴포넌트 마운트 시 한 번만 호출됨
+
+  // 식당 정보 가져오기
+  useEffect(() => {
+    const fetchRestaurants = async () => {
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_BACKEND_API_URL}/restaurants/by-recipe?recipeId=${recipeId}`
+        );
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setRestaurantData(data);
+          console.log("restaurantData", data);  // API에서 받아온 데이터 확인
+        }
+      } catch (error) {
+        console.error("식당 정보를 불러오는데 실패했습니다.", error);
+      } finally {
+        setLoading(false);  // 로딩 상태 종료
+      }
+    };
+
+    if (recipeId !== undefined) {
+      fetchRestaurants();
+    }
+  }, [recipeId]); // recipeId가 변경될 때마다 호출됨
+
+  // 로딩 중에 화면을 표시하거나, 로딩 완료 후 처리
+  if (loading) {
+    return <div>Loading...</div>; // 로딩 중 화면
+  }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h2 className="text-xl font-semibold text-orange-800 mb-4">
-        Find Directions to {food.pronunciation}
-      </h2>
-
-      <div className="w-full overflow-hidden rounded-xl" style={{ height: '600px' }}>
-        <iframe
-          title="Naver Directions"
-          src={`https://map.naver.com/v5/directions/-/14128591.55887554,4518285.1591957123,%EC%84%9C%EC%9A%B8,%EA%B5%AD%EB%82%B4%EC%97%AC%ED%96%89,0?c=14128591.55887554,4518285.1591957123,15,0,0,0,dh&lang=en`}
-          className="w-full h-full border-0 rounded-xl"
-          allowFullScreen
-        />
-      </div>
-    </div>
+    <Maptest
+      currentMyLocation={currentMyLocation}
+      restaurantData={restaurantData}
+    />
   );
 };
 
-export default NaverMapDirectionsEmbed;
+export default NaverMap;

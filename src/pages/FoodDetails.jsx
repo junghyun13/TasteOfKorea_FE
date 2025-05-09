@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Utensils, FileText, MapPin } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom'; // ✅ useNavigate 추가
+import NaverMap from '../components/NaverMap';
 
 const FoodDetails = ({ match }) => {
   const { id } = useParams();
@@ -52,7 +53,11 @@ const FoodDetails = ({ match }) => {
     return stars;
   };
 
-
+  useEffect(() => {
+    if (activeTab === 'map') {
+      navigate(`/map/${id}`); // map 탭 클릭 시 해당 ID로 URL 변경
+    }
+  }, [activeTab, id, navigate]); // activeTab, id, navigate가 변경될 때마다 실행
 
   if (loading) {
     return (
@@ -74,8 +79,6 @@ const FoodDetails = ({ match }) => {
 
   return (
     <div className="bg-orange-50 min-h-screen p-4 sm:p-6">
-      
-
       <main className="max-w-lg mx-auto">
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           {/* Image Banner */}
@@ -134,7 +137,6 @@ const FoodDetails = ({ match }) => {
                     <span className="text-orange-700">Pronunciation:</span>
                     <span className="font-medium">{food.pronunciation}</span>
                   </div>
-              
 
                   {food.category === 'meat' && (
                     <div className="bg-red-50 p-2 rounded-lg text-red-600 text-center mt-2">
@@ -142,7 +144,6 @@ const FoodDetails = ({ match }) => {
                     </div>
                   )}
                 </div>
-
               </div>
             )}
 
@@ -192,44 +193,16 @@ const FoodDetails = ({ match }) => {
               </div>
             )}
 
-{activeTab === 'map' && (
-  <div>
-    <div className="w-full overflow-x-auto rounded-xl" style={{ WebkitOverflowScrolling: 'touch' }}>
-  <div style={{ minWidth: '1024px', height: '75vh' }}>
-    <iframe
-      src={`https://map.naver.com/v5/search/${encodeURIComponent(food.koreanName + ' 한식당')}?c=14128565.6641455,4518243.3503569,13,0,0,0,dh`}
-      title={`${food.koreanName} 맛집 지도`}
-      style={{
-        width: '100%',
-        height: '100%',
-        border: 'none',
-      }}
-      allowFullScreen
-    ></iframe>
-  </div>
-</div>
-
-{/* 주황색 버튼 추가 */}
-<div className="mt-4">
-  <a
-    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(food.koreanName + ' 한식당')}`}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="block w-full text-center bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition-colors"
-  >
-    Open in Google Maps
-  </a>
-</div>
-  </div>
-)}
-
-
+            {activeTab === 'map' && (
+              <div id="map">
+                <NaverMap id={id} /> {/* 지도 컴포넌트를 여기에 추가 */}
+              </div>
+            )}
           </div>
         </div>
       </main>
     </div>
   );
 };
-
 
 export default FoodDetails;

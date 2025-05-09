@@ -9,6 +9,7 @@ import Maintep from './pages/Maintep';
 import Recommend from './pages/recommend';
 import Navbar from './components/Navbar'; // 추가
 import FoodDetail from './pages/FoodDetails';
+import NaverMapPage from './components/NaverMap';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
             <Route path="/" element={<Maintep />} />
             <Route path="/recommend" element={<Recommend />} />
             <Route path="/fooddetail/:id" element={<FoodDetail />} />
+            <Route path="/map/:recipeId" element={<NaverMapPage />} />
           </Routes>
         </div>
       </Router>
