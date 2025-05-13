@@ -30,7 +30,15 @@ const LoginPage = () => {
 
       if (res.status === 200) {
         alert('Login successful! (로그인 성공!)');
-        localStorage.setItem('authToken', res.data.token);
+        const token = res.headers['authorization']?.split(' ')[1]; // 'Bearer <token>' → <token>만 추출
+if (token) {
+  localStorage.setItem('authToken', token);
+  console.log('로그인 후 저장된 토큰:', token);
+  console.log('Authorization: Bearer ' + token);
+} else {
+  console.warn('Authorization 헤더가 존재하지 않습니다!');
+}
+
         navigate('/');
       }
     } catch (err) {
