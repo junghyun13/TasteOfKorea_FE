@@ -10,6 +10,9 @@ import Recommend from './pages/recommend';
 import Navbar from './components/Navbar'; // 추가
 import FoodDetail from './pages/FoodDetails';
 import NaverMapPage from './components/NaverMap';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import MyPage from './pages/MyPage';
 
 function App() {
   return (
@@ -24,6 +27,9 @@ function App() {
             <Route path="/recommend" element={<Recommend />} />
             <Route path="/fooddetail/:id" element={<FoodDetail />} />
             <Route path="/map/:recipeId" element={<NaverMapPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/mypage" element={<MyPage />} />
           </Routes>
         </div>
       </Router>
