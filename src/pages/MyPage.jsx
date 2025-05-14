@@ -12,29 +12,63 @@ const MyPage = () => {
 
   useEffect(() => {
     const fetchUserInfo = async () => {
-      try {
-        const token = localStorage.getItem('authToken');
+  try {
+    const token = localStorage.getItem('authToken');
 
-        const res = await axios.get(
+    const res = await axios.get(
+      `${import.meta.env.VITE_BACKEND_API_URL}/api/user/user-info`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+      }
+    );
+
+    setUserInfo(res.data);
+    setIntroduce(res.data.introduce || '');
+  } catch (err) {
+    // ✅ 토큰 만료 시: 401 이면 재발급 시도
+    if (err.response && err.response.status === 401) {
+      try {
+        const reissueRes = await axios.post(
+          `${import.meta.env.VITE_BACKEND_API_URL}/api/user/reissue`,
+          {},
+          { withCredentials: true }
+        );
+
+        const newAccessToken = reissueRes.data.accessToken;
+        localStorage.setItem('authToken', newAccessToken);
+
+        // 🔁 새 토큰으로 재요청
+        const retryRes = await axios.get(
           `${import.meta.env.VITE_BACKEND_API_URL}/api/user/user-info`,
           {
             headers: {
-              Authorization: `Bearer ${token}`,
+              Authorization: `Bearer ${newAccessToken}`,
             },
             withCredentials: true,
           }
         );
 
-        setUserInfo(res.data);
-        setIntroduce(res.data.introduce || '');
-      } catch (err) {
-        console.error('유저 정보 조회 실패:', err);
-        alert('로그인이 필요합니다.');
+        setUserInfo(retryRes.data);
+        setIntroduce(retryRes.data.introduce || '');
+      } catch (retryErr) {
+        console.error('토큰 재발급 실패:', retryErr);
+        alert('로그인이 만료되었습니다. 다시 로그인해주세요.');
+        localStorage.removeItem('authToken');
         navigate('/login');
-      } finally {
-        setLoading(false);
       }
-    };
+    } else {
+      console.error('유저 정보 조회 실패:', err);
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+    }
+  } finally {
+    setLoading(false);
+  }
+};
+
 
     fetchUserInfo();
   }, [accessToken, navigate]);
