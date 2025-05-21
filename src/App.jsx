@@ -13,6 +13,9 @@ import NaverMapPage from './components/NaverMap';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import MyPage from './pages/MyPage';
+import RestaurantForm from './pages/RestaurantForm';
+import RestaurantEditForm from './pages/RestaurantEditForm';
+import MyRestaurants from './pages/MyRestaurants';
 
 function App() {
   return (
@@ -30,6 +33,9 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/mypage" element={<MyPage />} />
+            <Route path="/restaurant-form" element={<RestaurantForm />} />
+            <Route path="/RestaurantEditForm/:id" element={<RestaurantEditForm />} />
+            <Route path="/restaurants/my" element={<MyRestaurants />} />
           </Routes>
         </div>
       </Router>

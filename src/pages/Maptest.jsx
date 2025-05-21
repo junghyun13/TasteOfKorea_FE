@@ -12,7 +12,8 @@ const Maptest = ({ currentMyLocation, restaurantData }) => {
   useEffect(() => {
     // 네이버 지도 API 스크립트 로드 여부 확인
     const script = document.createElement('script');
-    script.src = "https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=agraep27s7&language=en";
+    script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${import.meta.env.VITE_NAVER_MAP_CLIENT_ID}&language=en`;
+
     script.onload = () => {
       setIsNaverLoaded(true); // 스크립트가 로드되면 상태 업데이트
     };
@@ -60,7 +61,7 @@ const Maptest = ({ currentMyLocation, restaurantData }) => {
         icon: {
           content: `<div style="position: relative; width: 60px; height: 60px;">
                       <div style="width: 50px; height: 50px; border-radius: 50%; overflow: hidden; border: 3px solid #FF6B6B; box-shadow: 0 2px 6px rgba(0,0,0,0.3);">
-                        <img src="${restaurant.imageUrl}" alt="${restaurant.englishName}" style="width: 100%; height: 100%; object-fit: cover;"/>
+                        <img src="${restaurant.file}" alt="${restaurant.englishName}" style="width: 100%; height: 100%; object-fit: cover;"/>
                       </div>
                       <div style="position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
                         width: 0; height: 0; border-left: 8px solid transparent;
@@ -71,22 +72,25 @@ const Maptest = ({ currentMyLocation, restaurantData }) => {
         }
       });
 
-      const infoWindowContent = 
-        `<div style="width: 280px; padding: 0; border-radius: 8px; background-color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);" class="infoWindow">
-          <div style="display: flex; justify-content: space-between; align-items: center; background-color: #FF6B6B; color: white; padding: 10px 12px; border-radius: 8px 8px 0 0;">
-            <strong style="font-size: 16px;">${restaurant.englishName}</strong>
-            <button class="closeButton" style="border: none; background: none; font-size: 14px; cursor: pointer; color: white; font-weight: normal; margin-left: auto;">✕</button>
-          </div>
-          <img src="${restaurant.imageUrl}" alt="${restaurant.englishName}" style="width: 100%; height: 140px; object-fit: cover; margin-bottom: 0;"/>
-          <div style="line-height: 1.6; padding: 12px;">
-            <div style="margin-bottom: 10px;">
-              <div style="display: flex; align-items: center; margin-bottom: 6px;">👤 Owner: ${restaurant.ownerName}</div>
-              <div style="display: flex; align-items: center; margin-bottom: 6px;">💰 Price: ₩${restaurant.price.toLocaleString()}</div>
-              <div style="display: flex; align-items: center;">🍳 Recipe ID: ${restaurant.recipeId}</div>
-            </div>
-          </div>
-          <button class="howToGoButton" style="width: 100%; padding: 10px; background-color: #FF6B6B; color: white; border: none; font-weight: bold; cursor: pointer;">How to Go</button>
-        </div>`;
+      const infoWindowContent = `
+  <div style="width: 280px; padding: 0; border-radius: 8px; background-color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);" class="infoWindow">
+    <div style="display: flex; justify-content: space-between; align-items: center; background-color: #FF6B6B; color: white; padding: 10px 12px; border-radius: 8px 8px 0 0;">
+      <strong style="font-size: 16px; white-space: nowrap;">${restaurant.englishName}</strong>
+      <button class="closeButton" style="border: none; background: none; font-size: 16px; cursor: pointer; color: white; font-weight: normal; padding: 0; width: 18px; height: 18px; line-height: 18px; text-align: center; border-radius: 50%; margin-left: 8px; transition: background-color 0.3s;">
+        ✕
+      </button>
+    </div>
+    <img src="${restaurant.file}" alt="${restaurant.englishName}" style="width: 100%; height: 140px; object-fit: cover; margin-bottom: 0;"/>
+    <div style="line-height: 1.6; padding: 12px;">
+      <div style="margin-bottom: 10px;">
+        <div style="display: flex; align-items: center; margin-bottom: 6px;">👤 Owner: ${restaurant.ownerName}</div>
+        <div style="display: flex; align-items: center; margin-bottom: 6px;">💰 Price: ₩${restaurant.price.toLocaleString()}</div>
+        <div style="display: flex; align-items: center;">🍳 Recipe ID: ${restaurant.recipeId}</div>
+      </div>
+    </div>
+    <button class="howToGoButton" style="width: 100%; padding: 10px; background-color: #FF6B6B; color: white; border: none; font-weight: bold; cursor: pointer;">How to Go</button>
+  </div>
+`;
 
       const infoWindow = new window.naver.maps.InfoWindow({
         content: infoWindowContent,

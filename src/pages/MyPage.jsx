@@ -10,6 +10,9 @@ const MyPage = () => {
 
   const accessToken = localStorage.getItem('authToken');
 
+  const goToRegisterRestaurant = () => navigate('/restaurant-form');
+  const goToMyRestaurants = () => navigate('/restaurants/my');
+
   useEffect(() => {
     const fetchUserInfo = async () => {
   try {
@@ -72,6 +75,7 @@ const MyPage = () => {
 
     fetchUserInfo();
   }, [accessToken, navigate]);
+  
 
   const handleUpdate = async () => {
     try {
@@ -155,6 +159,8 @@ const MyPage = () => {
     </div>
   );
 
+
+
   return (
     <div className="min-h-screen bg-orange-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
@@ -183,6 +189,21 @@ const MyPage = () => {
             >
               Update Info (정보 수정)
             </button>
+
+          
+  <button 
+    onClick={goToRegisterRestaurant} 
+    className="px-6 py-3 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors"
+  >
+    식당 등록하기
+  </button>
+
+  <button 
+    onClick={goToMyRestaurants} 
+    className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition-colors"
+  >
+    내 식당 보러가기
+  </button>
             
             <button 
               onClick={handleLogout} 
