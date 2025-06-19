@@ -27,7 +27,7 @@ const Maptest = ({ currentMyLocation, restaurantData }) => {
   }, []);
 
   useEffect(() => {
-    if (!isNaverLoaded || !window.naver || !currentMyLocation.lat || restaurantData.length === 0) return;
+    if (!isNaverLoaded || !window.naver || !currentMyLocation.lat) return;
 
     const map = new window.naver.maps.Map('map', {
       center: new window.naver.maps.LatLng(currentMyLocation.lat, currentMyLocation.lng),
