@@ -8,6 +8,7 @@ const Maptest = ({ currentMyLocation, restaurantData }) => {
   const [transportMode, setTransportMode] = useState('driving-car'); // 교통 수단을 driving-car로 초기화
   const mapRef = useRef(null); // ✅ 지도 객체를 저장할 ref
   const polylineRef = useRef(null); // ✅ 이전 경로 저장
+  
 
   useEffect(() => {
     // 네이버 지도 API 스크립트 로드 여부 확인
@@ -89,6 +90,7 @@ const Maptest = ({ currentMyLocation, restaurantData }) => {
       </div>
     </div>
     <button class="howToGoButton" style="width: 100%; padding: 10px; background-color: #FF6B6B; color: white; border: none; font-weight: bold; cursor: pointer;">How to Go</button>
+    <button class="orderButton" style="width: 100%; padding: 10px; background-color: orange; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px;">Order</button>
   </div>
 `;
 
@@ -115,6 +117,16 @@ const Maptest = ({ currentMyLocation, restaurantData }) => {
           if (howToGoButton) {
             howToGoButton.addEventListener('click', () => {
               getRoute(currentMyLocation, restaurant);
+            });
+          }
+          const orderButton = document.querySelector('.orderButton');
+          if (orderButton) {
+            orderButton.addEventListener('click', () => {
+              const url = `${import.meta.env.VITE_BACKEND_API_URL}/restaurants/order?restaurantName=${restaurant.englishName}&recipeId=${restaurant.recipeId}`;
+              fetch(url, { method: 'POST' })
+                .then(res => res.text())
+                .then(alert)
+                .catch(err => alert('order fail: ' + err));
             });
           }
         }, 100);

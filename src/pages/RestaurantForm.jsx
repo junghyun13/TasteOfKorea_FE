@@ -472,7 +472,7 @@ useEffect(() => {
               <div className="relative">
                 <label className="block text-orange-800 font-medium mb-2 flex items-center">
                   <User className="w-5 h-5 mr-2 text-orange-500" />
-                  영어 이름
+                  식당 이름
                 </label>
                 <input 
                   type="text" 
