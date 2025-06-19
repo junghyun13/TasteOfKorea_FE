@@ -185,7 +185,7 @@ const foodfind = () => {
             {foodName && confidence !== null && (
               <div className="mt-6 p-4 bg-orange-50 rounded-xl text-center">
                 <h2 className="text-xl font-semibold text-orange-800">Predicted Food: {foodName}</h2>
-                <p className="text-lg text-orange-600">Confidence: {(confidence * 100).toFixed(2)}%</p>
+                <p className="text-lg text-orange-600">Confidence: {confidence.toFixed(2)}%</p>
               </div>
             )}
 
