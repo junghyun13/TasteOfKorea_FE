@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import polyline from '@mapbox/polyline'; // 맨 위에 추가 필요
+import { useNavigate } from 'react-router-dom';
+
 
 const Maptest = ({ currentMyLocation, restaurantData }) => {
   const [isNaverLoaded, setIsNaverLoaded] = useState(false);
@@ -8,6 +10,8 @@ const Maptest = ({ currentMyLocation, restaurantData }) => {
   const [transportMode, setTransportMode] = useState('driving-car'); // 교통 수단을 driving-car로 초기화
   const mapRef = useRef(null); // ✅ 지도 객체를 저장할 ref
   const polylineRef = useRef(null); // ✅ 이전 경로 저장
+  const navigate = useNavigate();
+
   
 
   useEffect(() => {
@@ -86,10 +90,11 @@ const Maptest = ({ currentMyLocation, restaurantData }) => {
       <div style="margin-bottom: 10px;">
         <div style="display: flex; align-items: center; margin-bottom: 6px;">👤 Owner: ${restaurant.ownerName}</div>
         <div style="display: flex; align-items: center; margin-bottom: 6px;">💰 Price: ₩${restaurant.price.toLocaleString()}</div>
-        <div style="display: flex; align-items: center;">🍳 Recipe ID: ${restaurant.recipeId}</div>
+        
       </div>
     </div>
     <button class="howToGoButton" style="width: 100%; padding: 10px; background-color: #FF6B6B; color: white; border: none; font-weight: bold; cursor: pointer;">How to Go</button>
+    <button class="foodDetailButton" style="width: 100%; padding: 10px; background-color: green; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px;">Food Explanation</button>
     <button class="orderButton" style="width: 100%; padding: 10px; background-color: orange; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px;">Order</button>
   </div>
 `;
@@ -124,11 +129,17 @@ const Maptest = ({ currentMyLocation, restaurantData }) => {
             orderButton.addEventListener('click', () => {
               const url = `${import.meta.env.VITE_BACKEND_API_URL}/restaurants/order?restaurantName=${restaurant.englishName}&recipeId=${restaurant.recipeId}`;
               fetch(url, { method: 'POST' })
-                .then(res => res.text())
-                .then(alert)
+                .then(() => alert('Success order'))
                 .catch(err => alert('order fail: ' + err));
             });
           }
+          const foodDetailButton = document.querySelector('.foodDetailButton');
+if (foodDetailButton) {
+  foodDetailButton.addEventListener('click', () => {
+    navigate(`/fooddetail/${restaurant.recipeId}`);
+  });
+}
+
         }, 100);
       });
     });
