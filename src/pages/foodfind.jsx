@@ -76,26 +76,33 @@ const foodfind = () => {
 };
 
 
-  // ✅ 파일 선택 핸들러 (리사이즈 포함)
   const handleFileChange = async (event) => {
-    const selectedFile = event.target.files[0];
-    if (!selectedFile) return;
+  const selectedFile = event.target.files[0];
+  if (!selectedFile) return;
 
-    try {
-      const resizedBlob = await resizeImage(selectedFile, 800, 800); // 최대 800x800
-      const resizedFile = new File([resizedBlob], selectedFile.name, { type: selectedFile.type });
-      setFile(resizedFile);
+  try {
+    const resizedBlob = await resizeImage(selectedFile, 800, 800);
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(resizedFile);
-    } catch (err) {
-      console.error("이미지 처리 중 오류:", err);
-      setError("이미지 처리 중 오류가 발생했습니다.");
-    }
-  };
+    // ✅ 강제 MIME 타입 지정
+    const fixedType = 'image/jpeg';
+
+    // ✅ File 대신 Blob 그대로 전송 (MIME 문제 회피)
+    const finalFile = new File([resizedBlob], selectedFile.name || 'upload.jpg', { type: fixedType });
+
+    setFile(finalFile);
+
+    // ✅ preview 처리
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result);
+    };
+    reader.readAsDataURL(finalFile);
+  } catch (err) {
+    console.error("이미지 처리 중 오류:", err);
+    setError("이미지 처리 중 오류가 발생했습니다. 카카오톡이나 갤러리에서 다시 저장 후 시도해 주세요.");
+  }
+};
+
 
   const handleSubmit = async () => {
     if (!file) return;
