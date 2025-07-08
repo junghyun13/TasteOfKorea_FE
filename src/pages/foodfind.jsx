@@ -60,9 +60,7 @@ const foodfind = () => {
     });
   };
 
-  // 이미지 리사이즈 및 회전 처리
-  // 이미지 리사이즈 및 EXIF 회전 처리
-const resizeImage = (file, maxWidth, maxHeight) => {
+  const resizeImage = (file, maxWidth, maxHeight) => {
   return new Promise((resolve, reject) => {
     getOrientation(file).then((orientation) => {
       const img = new Image();
@@ -74,56 +72,57 @@ const resizeImage = (file, maxWidth, maxHeight) => {
 
       img.onload = () => {
         try {
-          let width = img.width;
-          let height = img.height;
+          let originWidth = img.width;
+          let originHeight = img.height;
 
           // 비율 계산
-          const ratio = Math.min(maxWidth / width, maxHeight / height, 1);
-          width *= ratio;
-          height *= ratio;
+          const scale = Math.min(maxWidth / originWidth, maxHeight / originHeight, 1);
+          const width = originWidth * scale;
+          const height = originHeight * scale;
 
-          // canvas 생성
+          const isRotated = orientation >= 5 && orientation <= 8;
+
           const canvas = document.createElement("canvas");
           const ctx = canvas.getContext("2d");
 
-          const isRotated = orientation >= 5 && orientation <= 8;
+          // 회전 시 width/height 교체
           canvas.width = isRotated ? height : width;
           canvas.height = isRotated ? width : height;
 
           ctx.save();
-          ctx.fillStyle = "white";
+          ctx.fillStyle = 'white';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-          // 회전 변환
+          // 회전 + 이동 처리
           switch (orientation) {
-            case 2: // horizontal flip
+            case 2:
               ctx.translate(canvas.width, 0);
               ctx.scale(-1, 1);
               break;
-            case 3: // 180°
+            case 3:
               ctx.translate(canvas.width, canvas.height);
               ctx.rotate(Math.PI);
               break;
-            case 4: // vertical flip
+            case 4:
               ctx.translate(0, canvas.height);
               ctx.scale(1, -1);
               break;
-            case 5: // vertical flip + 90°
+            case 5:
               ctx.rotate(0.5 * Math.PI);
               ctx.scale(1, -1);
               break;
-            case 6: // 90°
+            case 6:
+              ctx.translate(canvas.width, 0);
               ctx.rotate(0.5 * Math.PI);
-              ctx.translate(0, -canvas.width);
               break;
-            case 7: // horizontal flip + 90°
+            case 7:
+              ctx.translate(canvas.width, 0);
               ctx.rotate(0.5 * Math.PI);
-              ctx.translate(canvas.height, -canvas.width);
               ctx.scale(-1, 1);
               break;
-            case 8: // -90°
+            case 8:
+              ctx.translate(0, canvas.height);
               ctx.rotate(-0.5 * Math.PI);
-              ctx.translate(-canvas.height, 0);
               break;
             default:
               break;
@@ -136,21 +135,22 @@ const resizeImage = (file, maxWidth, maxHeight) => {
             if (blob && blob.size > 0) {
               resolve(blob);
             } else {
-              reject(new Error("Failed to convert image to Blob"));
+              reject(new Error("Canvas blob is empty"));
             }
-          }, "image/jpeg", 0.9);
-        } catch (err) {
-          reject(new Error("Image transformation failed"));
+          }, 'image/jpeg', 0.9);
+        } catch (error) {
+          reject(new Error("Canvas transformation failed"));
         }
       };
 
-      reader.onerror = () => reject(new Error("FileReader failed"));
+      reader.onerror = () => reject(new Error("File reading failed"));
       reader.readAsDataURL(file);
     }).catch((err) => {
-      reject(new Error("Orientation read failed"));
+      reject(new Error("Orientation parsing failed"));
     });
   });
 };
+
 
 
 
