@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, Camera } from 'lucide-react';
+import { Camera } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const foodfind = () => {
@@ -14,16 +14,71 @@ const foodfind = () => {
   const [allergyIngredients, setAllergyIngredients] = useState([]);
   const navigate = useNavigate();
 
-  const handleFileChange = (event) => {
-    const selectedFile = event.target.files[0];
-    setFile(selectedFile);
+  // ✅ 이미지 리사이즈 함수
+  const resizeImage = (file, maxWidth, maxHeight) => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const reader = new FileReader();
 
-    if (selectedFile) {
+      reader.onload = (e) => {
+        img.src = e.target.result;
+      };
+
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+
+        // 비율 유지하며 리사이즈
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round(height * (maxWidth / width));
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round(width * (maxHeight / height));
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error("Blob 변환 실패"));
+          }
+        }, file.type);
+      };
+
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // ✅ 파일 선택 핸들러 (리사이즈 포함)
+  const handleFileChange = async (event) => {
+    const selectedFile = event.target.files[0];
+    if (!selectedFile) return;
+
+    try {
+      const resizedBlob = await resizeImage(selectedFile, 800, 800); // 최대 800x800
+      const resizedFile = new File([resizedBlob], selectedFile.name, { type: selectedFile.type });
+      setFile(resizedFile);
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
       };
-      reader.readAsDataURL(selectedFile);
+      reader.readAsDataURL(resizedFile);
+    } catch (err) {
+      console.error("이미지 처리 중 오류:", err);
+      setError("이미지 처리 중 오류가 발생했습니다.");
     }
   };
 
@@ -42,7 +97,6 @@ const foodfind = () => {
     formData.append('file', file);
 
     try {
-      console.log("Sending prediction request");
       const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/api/food/predict`, {
         method: 'POST',
         body: formData,
@@ -53,19 +107,16 @@ const foodfind = () => {
       }
 
       const result = await response.json();
-      console.log("Prediction result:", result);
       setFoodName(result.class);
       setConfidence(result.confidence);
 
       if (result.class) {
-        console.log(`Fetching details for food ID: ${result.id}`);
         const foodDetailsResponse = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/api/food/${result.id}`);
         if (!foodDetailsResponse.ok) {
           throw new Error(`Failed to fetch food details: ${foodDetailsResponse.status}`);
         }
 
         const foodDetailsData = await foodDetailsResponse.json();
-        console.log("Food details:", foodDetailsData);
         setFoodDetails({ ...foodDetailsData, id: result.id });
       }
     } catch (error) {
@@ -77,28 +128,22 @@ const foodfind = () => {
   };
 
   const checkAllergies = async () => {
-    // 이 부분을 수정: foodDetails?.id가 undefined 또는 0일 때도 처리
     if (foodDetails?.id === undefined) {
-      console.log("ID가 없습니다.");
       return;
     }
-    
+
     try {
-      console.log(`Fetching allergen info for food ID: ${foodDetails.id}`);
       const allergyResponse = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/api/food/${foodDetails.id}/filter`);
       if (!allergyResponse.ok) {
         throw new Error(`Failed to fetch allergy information: ${allergyResponse.status}`);
       }
-      
+
       const allergyData = await allergyResponse.json();
-      console.log("Allergy data received:", allergyData);
-      
-      const ingredients = allergyData.allergyIngredients ? 
-        Object.keys(allergyData.allergyIngredients).filter(key => allergyData.allergyIngredients[key] === 1) : 
-        [];
-      
+      const ingredients = allergyData.allergyIngredients ?
+        Object.keys(allergyData.allergyIngredients).filter(key => allergyData.allergyIngredients[key] === 1) : [];
+
       setAllergyIngredients(ingredients);
-      
+
       if (ingredients.length > 0) {
         setShowAllergyConfirm(true);
       } else {
@@ -107,30 +152,22 @@ const foodfind = () => {
     } catch (error) {
       console.error("Allergy check error:", error);
       setError(`An error occurred fetching allergy information: ${error.message}`);
-      // 오류 발생 시에도 디테일 페이지로 이동하지 않고 오류 메시지만 표시
     }
   };
 
   const handleAllergyResponse = (hasAllergy) => {
     setShowAllergyConfirm(false);
     if (hasAllergy) {
-      // User has allergy, navigate to recommendations
       navigate('/recommend');
     } else {
-      // User doesn't have allergy, continue to food detail page
       goToDetailPage();
     }
   };
 
   const goToDetailPage = () => {
     const foodId = foodDetails?.id;
-
-    // foodId가 0일 때도 정상적으로 처리되도록 수정
     if (foodId !== undefined) {
-      console.log(`Navigating to: /fooddetail/${foodId}`);
       navigate(`/fooddetail/${foodId}`);
-    } else {
-      console.log("ID가 없습니다.");
     }
   };
 
@@ -146,7 +183,7 @@ const foodfind = () => {
 
             <label htmlFor="file-input" className="mb-4 w-full text-orange-500 cursor-pointer">
               {file ? "Selected File: " + file.name : "Select a file"}
-              <input 
+              <input
                 id="file-input"
                 type="file"
                 accept="image/*"
@@ -157,7 +194,7 @@ const foodfind = () => {
 
             {imagePreview && (
               <div className="mb-4 flex justify-center">
-                <img 
+                <img
                   src={imagePreview}
                   alt="Preview"
                   className="max-w-full h-48 object-cover rounded-xl shadow-md"
@@ -169,14 +206,7 @@ const foodfind = () => {
               <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className="w-full px-6 py-3 
-                  bg-orange-500 text-white 
-                  rounded-full 
-                  hover:bg-orange-600 
-                  transition-colors 
-                  disabled:opacity-50 
-                  flex items-center 
-                  justify-center"
+                className="w-full px-6 py-3 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition-colors disabled:opacity-50 flex items-center justify-center"
               >
                 {loading ? 'Predicting...' : 'Predict Food'}
               </button>
@@ -194,16 +224,13 @@ const foodfind = () => {
                 <h3 className="text-xl font-semibold text-orange-800">Food Details</h3>
                 <p className="text-lg text-orange-600">Korean Name: {foodDetails.koreanName}</p>
                 <p className="text-lg text-orange-600">English Name: {foodDetails.englishName}</p>
-                <p className="text-lg text-orange-600">
-                  Pronunciation: {foodDetails.pronunciation}</p>
-                  
-                <img 
-                  src={foodDetails.imageLink} 
-                  alt={foodDetails.englishName} 
+                <p className="text-lg text-orange-600">Pronunciation: {foodDetails.pronunciation}</p>
+                <img
+                  src={foodDetails.imageLink}
+                  alt={foodDetails.englishName}
                   onClick={checkAllergies}
                   className="mt-4 max-w-full h-48 object-cover rounded-xl shadow-md cursor-pointer hover:opacity-90 transition-opacity"
                 />
-
                 <button
                   onClick={checkAllergies}
                   className="mt-4 w-full px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
@@ -213,27 +240,34 @@ const foodfind = () => {
               </div>
             )}
 
-            {/* Allergy Confirmation Dialog */}
             {showAllergyConfirm && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                 <div className="bg-white p-6 rounded-xl shadow-lg max-w-sm mx-4 w-full">
                   <h3 className="text-xl font-bold text-orange-800 mb-4">Allergy Check</h3>
                   <p className="mb-6">
-                    Do you have allergy to {allergyIngredients.length > 0 ? allergyIngredients.map((item, index) => (
-                      <span key={item} className="font-bold">
-                        {index === 0 ? '' : index === allergyIngredients.length - 1 ? ' or ' : ', '}
-                        '{item}'
-                      </span>
-                    )) : "any ingredients"}?
+                    Do you have allergy to{" "}
+                    {allergyIngredients.length > 0
+                      ? allergyIngredients.map((item, index) => (
+                          <span key={item} className="font-bold">
+                            {index === 0
+                              ? ""
+                              : index === allergyIngredients.length - 1
+                              ? " or "
+                              : ", "}
+                            '{item}'
+                          </span>
+                        ))
+                      : "any ingredients"}
+                    ?
                   </p>
                   <div className="flex space-x-4">
-                    <button 
+                    <button
                       onClick={() => handleAllergyResponse(true)}
                       className="flex-1 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                     >
                       Yes
                     </button>
-                    <button 
+                    <button
                       onClick={() => handleAllergyResponse(false)}
                       className="flex-1 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
                     >
