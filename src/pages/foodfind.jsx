@@ -73,64 +73,53 @@ const resizeImage = (file, maxWidth, maxHeight) => {
 
       img.onload = () => {
         try {
-          let { width, height } = img;
+          let originalWidth = img.width;
+          let originalHeight = img.height;
 
-          // 비율 조정
-          const ratio = Math.min(maxWidth / width, maxHeight / height, 1);
-          width = width * ratio;
-          height = height * ratio;
+          // 비율 계산
+          const ratio = Math.min(maxWidth / originalWidth, maxHeight / originalHeight, 1);
+          const newWidth = originalWidth * ratio;
+          const newHeight = originalHeight * ratio;
 
-          // 회전 여부에 따라 캔버스 크기 설정
-          const isRotated = orientation >= 5 && orientation <= 8;
           const canvas = document.createElement("canvas");
-          canvas.width = isRotated ? height : width;
-          canvas.height = isRotated ? width : height;
-
           const ctx = canvas.getContext("2d");
 
-          // 캔버스 배경 흰색
-          ctx.fillStyle = 'white';
+          // EXIF 회전에 따라 캔버스 크기 조정
+          const isRotated = orientation === 5 || orientation === 6 || orientation === 7 || orientation === 8;
+          canvas.width = isRotated ? newHeight : newWidth;
+          canvas.height = isRotated ? newWidth : newHeight;
+
+          // 배경 흰색으로 초기화
+          ctx.fillStyle = "white";
           ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-          // 캔버스 중심 이동 후 회전 적용
+          // 회전 기준으로 이동
           ctx.translate(canvas.width / 2, canvas.height / 2);
+
           switch (orientation) {
-            case 2:
-              ctx.scale(-1, 1);
-              break;
-            case 3:
-              ctx.rotate(Math.PI);
-              break;
-            case 4:
-              ctx.rotate(Math.PI);
-              ctx.scale(-1, 1);
-              break;
-            case 5:
-              ctx.rotate(0.5 * Math.PI);
-              ctx.scale(1, -1);
-              break;
-            case 6:
-              ctx.rotate(0.5 * Math.PI);
-              break;
-            case 7:
-              ctx.rotate(-0.5 * Math.PI);
-              ctx.scale(1, -1);
-              break;
-            case 8:
-              ctx.rotate(-0.5 * Math.PI);
-              break;
-            default:
-              break;
+            case 2: ctx.scale(-1, 1); break;
+            case 3: ctx.rotate(Math.PI); break;
+            case 4: ctx.rotate(Math.PI); ctx.scale(-1, 1); break;
+            case 5: ctx.rotate(0.5 * Math.PI); ctx.scale(1, -1); break;
+            case 6: ctx.rotate(0.5 * Math.PI); break;
+            case 7: ctx.rotate(-0.5 * Math.PI); ctx.scale(1, -1); break;
+            case 8: ctx.rotate(-0.5 * Math.PI); break;
+            default: break;
           }
 
-          // 이미지 그리기
-          ctx.drawImage(img, -width / 2, -height / 2, width, height);
+          // 이미지 그리기 (회전에 따라 축 바뀜)
+          ctx.drawImage(
+            img,
+            -newWidth / 2,
+            -newHeight / 2,
+            newWidth,
+            newHeight
+          );
 
           canvas.toBlob((blob) => {
             if (blob && blob.size > 0) {
               resolve(blob);
             } else {
-              // PNG로 재시도
               canvas.toBlob((fallbackBlob) => {
                 if (fallbackBlob && fallbackBlob.size > 0) {
                   resolve(fallbackBlob);
@@ -140,27 +129,19 @@ const resizeImage = (file, maxWidth, maxHeight) => {
               }, 'image/png');
             }
           }, 'image/jpeg', 0.9);
-
-        } catch (error) {
-          console.error("❌ Canvas processing error:", error);
-          reject(new Error("Failed to process image"));
+        } catch (err) {
+          console.error("❌ Canvas error:", err);
+          reject(err);
         }
       };
 
-      img.onerror = () => {
-        reject(new Error("Failed to load image"));
-      };
-      reader.onerror = () => {
-        reject(new Error("Failed to read image file"));
-      };
-
+      img.onerror = () => reject(new Error("Image load failed"));
+      reader.onerror = () => reject(new Error("File read failed"));
       reader.readAsDataURL(file);
-    }).catch((error) => {
-      console.error("❌ Orientation detection error:", error);
-      reject(new Error("Image processing failed"));
     });
   });
 };
+
 
 
   const handleFileChange = async (event) => {
