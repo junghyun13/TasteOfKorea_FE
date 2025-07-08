@@ -14,14 +14,14 @@ const foodfind = () => {
   const [allergyIngredients, setAllergyIngredients] = useState([]);
   const navigate = useNavigate();
 
-  // EXIF orientation 감지
+  // EXIF orientation 감지 - 개선된 버전
   const getOrientation = (file) => {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const view = new DataView(e.target.result);
         if (view.getUint16(0, false) !== 0xFFD8) {
-          resolve(1); // 기본값 1로 변경
+          resolve(1);
           return;
         }
         const length = view.byteLength;
@@ -44,7 +44,9 @@ const foodfind = () => {
             offset += 2;
             for (let i = 0; i < tags; i++) {
               if (view.getUint16(offset + (i * 12), little) === 0x0112) {
-                resolve(view.getUint16(offset + (i * 12) + 8, little));
+                const orientationValue = view.getUint16(offset + (i * 12) + 8, little);
+                console.log("📐 EXIF Orientation detected:", orientationValue);
+                resolve(orientationValue);
                 return;
               }
             }
@@ -61,99 +63,119 @@ const foodfind = () => {
   };
 
   const resizeImage = (file, maxWidth, maxHeight) => {
-  return new Promise((resolve, reject) => {
-    getOrientation(file).then((orientation) => {
-      const img = new Image();
-      const reader = new FileReader();
+    return new Promise((resolve, reject) => {
+      getOrientation(file).then((orientation) => {
+        const img = new Image();
+        const reader = new FileReader();
 
-      reader.onload = (e) => {
-        img.src = e.target.result;
-      };
+        reader.onload = (e) => {
+          img.src = e.target.result;
+        };
 
-      img.onload = () => {
-        try {
-          let originWidth = img.width;
-          let originHeight = img.height;
+        img.onload = () => {
+          try {
+            let originWidth = img.width;
+            let originHeight = img.height;
 
-          // 비율 계산
-          const scale = Math.min(maxWidth / originWidth, maxHeight / originHeight, 1);
-          const width = originWidth * scale;
-          const height = originHeight * scale;
+            console.log("🖼️ Original dimensions:", originWidth, "x", originHeight);
+            console.log("🔄 Orientation:", orientation);
 
-          const isRotated = orientation >= 5 && orientation <= 8;
+            // 비율 계산
+            const scale = Math.min(maxWidth / originWidth, maxHeight / originHeight, 1);
+            const scaledWidth = originWidth * scale;
+            const scaledHeight = originHeight * scale;
 
-          const canvas = document.createElement("canvas");
-          const ctx = canvas.getContext("2d");
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
 
-          // 회전 시 width/height 교체
-          canvas.width = isRotated ? height : width;
-          canvas.height = isRotated ? width : height;
-
-          ctx.save();
-          ctx.fillStyle = 'white';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-          // 회전 + 이동 처리
-          switch (orientation) {
-            case 2:
-              ctx.translate(canvas.width, 0);
-              ctx.scale(-1, 1);
-              break;
-            case 3:
-              ctx.translate(canvas.width, canvas.height);
-              ctx.rotate(Math.PI);
-              break;
-            case 4:
-              ctx.translate(0, canvas.height);
-              ctx.scale(1, -1);
-              break;
-            case 5:
-              ctx.rotate(0.5 * Math.PI);
-              ctx.scale(1, -1);
-              break;
-            case 6:
-              ctx.translate(canvas.width, 0);
-              ctx.rotate(0.5 * Math.PI);
-              break;
-            case 7:
-              ctx.translate(canvas.width, 0);
-              ctx.rotate(0.5 * Math.PI);
-              ctx.scale(-1, 1);
-              break;
-            case 8:
-              ctx.translate(0, canvas.height);
-              ctx.rotate(-0.5 * Math.PI);
-              break;
-            default:
-              break;
-          }
-
-          ctx.drawImage(img, 0, 0, width, height);
-          ctx.restore();
-
-          canvas.toBlob((blob) => {
-            if (blob && blob.size > 0) {
-              resolve(blob);
-            } else {
-              reject(new Error("Canvas blob is empty"));
+            // orientation에 따라 캔버스 크기 결정
+            switch (orientation) {
+              case 5:
+              case 6:
+              case 7:
+              case 8:
+                // 90도 또는 270도 회전 - width와 height를 바꿈
+                canvas.width = scaledHeight;
+                canvas.height = scaledWidth;
+                break;
+              default:
+                canvas.width = scaledWidth;
+                canvas.height = scaledHeight;
+                break;
             }
-          }, 'image/jpeg', 0.9);
-        } catch (error) {
-          reject(new Error("Canvas transformation failed"));
-        }
-      };
 
-      reader.onerror = () => reject(new Error("File reading failed"));
-      reader.readAsDataURL(file);
-    }).catch((err) => {
-      reject(new Error("Orientation parsing failed"));
+            // 흰색 배경 설정
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 캔버스 중심으로 이동
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+
+            // orientation에 따른 회전 및 변환
+            switch (orientation) {
+              case 1:
+                // 변환 없음
+                break;
+              case 2:
+                // 수평 뒤집기
+                ctx.scale(-1, 1);
+                break;
+              case 3:
+                // 180도 회전
+                ctx.rotate(Math.PI);
+                break;
+              case 4:
+                // 수직 뒤집기
+                ctx.scale(1, -1);
+                break;
+              case 5:
+                // 90도 회전 후 수평 뒤집기
+                ctx.rotate(0.5 * Math.PI);
+                ctx.scale(1, -1);
+                break;
+              case 6:
+                // 시계방향 90도 회전
+                ctx.rotate(0.5 * Math.PI);
+                break;
+              case 7:
+                // 270도 회전 후 수평 뒤집기
+                ctx.rotate(-0.5 * Math.PI);
+                ctx.scale(1, -1);
+                break;
+              case 8:
+                // 반시계방향 90도 회전
+                ctx.rotate(-0.5 * Math.PI);
+                break;
+              default:
+                break;
+            }
+
+            // 이미지를 중심에서 그리기
+            ctx.drawImage(img, -scaledWidth / 2, -scaledHeight / 2, scaledWidth, scaledHeight);
+
+            console.log("✅ Canvas dimensions:", canvas.width, "x", canvas.height);
+
+            canvas.toBlob((blob) => {
+              if (blob && blob.size > 0) {
+                resolve(blob);
+              } else {
+                reject(new Error("Canvas blob is empty"));
+              }
+            }, 'image/jpeg', 0.9);
+          } catch (error) {
+            console.error("Canvas transformation error:", error);
+            reject(new Error("Canvas transformation failed"));
+          }
+        };
+
+        reader.onerror = () => reject(new Error("File reading failed"));
+        reader.readAsDataURL(file);
+      }).catch((err) => {
+        console.error("Orientation parsing error:", err);
+        reject(new Error("Orientation parsing failed"));
+      });
     });
-  });
-};
-
-
-
-
+  };
 
   const handleFileChange = async (event) => {
     const selectedFile = event.target.files[0];
