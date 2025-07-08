@@ -14,52 +14,67 @@ const foodfind = () => {
   const [allergyIngredients, setAllergyIngredients] = useState([]);
   const navigate = useNavigate();
 
-  // ✅ 이미지 리사이즈 함수
   const resizeImage = (file, maxWidth, maxHeight) => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      const reader = new FileReader();
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
 
-      reader.onload = (e) => {
-        img.src = e.target.result;
-      };
+    reader.onload = (e) => {
+      img.src = e.target.result;
+    };
 
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        let width = img.width;
-        let height = img.height;
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      let width = img.width;
+      let height = img.height;
 
-        // 비율 유지하며 리사이즈
-        if (width > height) {
-          if (width > maxWidth) {
-            height = Math.round(height * (maxWidth / width));
-            width = maxWidth;
-          }
+      // ✅ 비율 유지하며 리사이즈
+      if (width > height) {
+        if (width > maxWidth) {
+          height = Math.round(height * (maxWidth / width));
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width = Math.round(width * (maxHeight / height));
+          height = maxHeight;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // ✅ toBlob 시도 → 실패 시 toDataURL + fetch fallback
+      canvas.toBlob(async (blob) => {
+        if (blob) {
+          console.log("✅ toBlob 성공");
+          resolve(blob);
         } else {
-          if (height > maxHeight) {
-            width = Math.round(width * (maxHeight / height));
-            height = maxHeight;
+          console.warn("⚠️ toBlob 실패, toDataURL로 fallback 시도");
+          try {
+            const dataURL = canvas.toDataURL(file.type);
+            const fetchedBlob = await fetch(dataURL).then(res => res.blob());
+            console.log("✅ toDataURL fallback 성공");
+            resolve(fetchedBlob);
+          } catch (fallbackErr) {
+            console.error("❌ toDataURL fallback 실패", fallbackErr);
+            reject(new Error("이미지를 처리할 수 없습니다. 다른 이미지를 선택하거나 저장 후 다시 시도해 주세요."));
           }
         }
+      }, file.type);
+    };
 
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
+    reader.onerror = (e) => {
+      console.error("❌ FileReader 오류", e);
+      reject(new Error("이미지를 읽을 수 없습니다."));
+    };
 
-        canvas.toBlob((blob) => {
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error("Blob 변환 실패"));
-          }
-        }, file.type);
-      };
+    reader.readAsDataURL(file);
+  });
+};
 
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
 
   // ✅ 파일 선택 핸들러 (리사이즈 포함)
   const handleFileChange = async (event) => {
