@@ -14,185 +14,162 @@ const foodfind = () => {
   const [allergyIngredients, setAllergyIngredients] = useState([]);
   const navigate = useNavigate();
 
-  // EXIF orientation 감지 - 개선된 버전
+  // 간단한 EXIF orientation 감지
   const getOrientation = (file) => {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const view = new DataView(e.target.result);
+        
+        // JPEG 파일인지 확인
         if (view.getUint16(0, false) !== 0xFFD8) {
           resolve(1);
           return;
         }
-        const length = view.byteLength;
+        
         let offset = 2;
-        while (offset < length) {
-          if (view.getUint16(offset + 2, false) <= 8) {
-            resolve(1);
-            return;
-          }
-          const marker = view.getUint16(offset, false);
+        let marker;
+        
+        while (offset < view.byteLength) {
+          marker = view.getUint16(offset, false);
           offset += 2;
+          
           if (marker === 0xFFE1) {
-            if (view.getUint32(offset += 2, false) !== 0x45786966) {
+            // EXIF 데이터 시작
+            offset += 2; // 길이 건너뛰기
+            
+            // "Exif" 문자열 확인
+            if (view.getUint32(offset, false) !== 0x45786966) {
               resolve(1);
               return;
             }
-            const little = view.getUint16(offset += 6, false) === 0x4949;
-            offset += view.getUint32(offset + 4, little);
+            
+            offset += 6; // "Exif\0\0" 건너뛰기
+            
+            // 바이트 순서 확인
+            const little = view.getUint16(offset, false) === 0x4949;
+            offset += 2;
+            
+            // "42" 확인
+            if (view.getUint16(offset, little) !== 0x002A) {
+              resolve(1);
+              return;
+            }
+            
+            offset += 2;
+            
+            // IFD 오프셋
+            const ifdOffset = view.getUint32(offset, little);
+            offset += ifdOffset - 8;
+            
+            // 태그 개수
             const tags = view.getUint16(offset, little);
             offset += 2;
+            
+            // Orientation 태그 찾기
             for (let i = 0; i < tags; i++) {
-              if (view.getUint16(offset + (i * 12), little) === 0x0112) {
-                const orientationValue = view.getUint16(offset + (i * 12) + 8, little);
-                console.log("📐 EXIF Orientation detected:", orientationValue);
-                resolve(orientationValue);
+              const tag = view.getUint16(offset + (i * 12), little);
+              if (tag === 0x0112) { // Orientation 태그
+                const orientation = view.getUint16(offset + (i * 12) + 8, little);
+                console.log("📐 EXIF Orientation:", orientation);
+                resolve(orientation);
                 return;
               }
             }
-          } else if ((marker & 0xFF00) !== 0xFF00) {
-            break;
-          } else {
-            offset += view.getUint16(offset, false);
           }
+          
+          // 다음 마커로 이동
+          if ((marker & 0xFF00) !== 0xFF00) {
+            break;
+          }
+          
+          const segmentLength = view.getUint16(offset, false);
+          offset += segmentLength;
         }
+        
         resolve(1);
       };
+      
+      reader.onerror = () => resolve(1);
       reader.readAsArrayBuffer(file);
     });
   };
 
   const resizeImage = (file, maxWidth, maxHeight) => {
-    return new Promise((resolve, reject) => {
-      getOrientation(file).then((orientation) => {
-        const img = new Image();
-        const reader = new FileReader();
+  return new Promise((resolve, reject) => {
+    getOrientation(file).then((orientation) => {
+      const img = new Image();
+      const reader = new FileReader();
 
-        reader.onload = (e) => {
-          img.src = e.target.result;
-        };
+      reader.onload = (e) => {
+        img.src = e.target.result;
+      };
 
-        img.onload = () => {
-          try {
-            let originWidth = img.width;
-            let originHeight = img.height;
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
 
-            console.log("🖼️ Original dimensions:", originWidth, "x", originHeight);
-            console.log("🔄 Orientation:", orientation);
+          let width = img.width;
+          let height = img.height;
 
-            // 비율 계산
-            const scale = Math.min(maxWidth / originWidth, maxHeight / originHeight, 1);
-            const scaledWidth = originWidth * scale;
-            const scaledHeight = originHeight * scale;
+          const scale = Math.min(maxWidth / width, maxHeight / height, 1);
+          width *= scale;
+          height *= scale;
 
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d");
+          // ✅ orientation 감지는 하지만, 회전은 하지 않음
+          canvas.width = width;
+          canvas.height = height;
 
-            // orientation에 따라 캔버스 크기 결정
-            switch (orientation) {
-              case 5:
-              case 6:
-              case 7:
-              case 8:
-                // 90도 또는 270도 회전 - width와 height를 바꿈
-                canvas.width = scaledHeight;
-                canvas.height = scaledWidth;
-                break;
-              default:
-                canvas.width = scaledWidth;
-                canvas.height = scaledHeight;
-                break;
-            }
+          ctx.fillStyle = 'white';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 흰색 배경 설정
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+          // ✅ 회전 없이 이미지 그대로 그리기
+          ctx.drawImage(img, 0, 0, width, height);
 
-            // 캔버스 중심으로 이동
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-
-            // orientation에 따른 회전 및 변환
-            switch (orientation) {
-              case 1:
-                // 변환 없음
-                break;
-              case 2:
-                // 수평 뒤집기
-                ctx.scale(-1, 1);
-                break;
-              case 3:
-                // 180도 회전
-                ctx.rotate(Math.PI);
-                break;
-              case 4:
-                // 수직 뒤집기
-                ctx.scale(1, -1);
-                break;
-              case 5:
-                // 90도 회전 후 수평 뒤집기
-                ctx.rotate(0.5 * Math.PI);
-                ctx.scale(1, -1);
-                break;
-              case 6:
-                // 시계방향 90도 회전
-                ctx.rotate(0.5 * Math.PI);
-                break;
-              case 7:
-                // 270도 회전 후 수평 뒤집기
-                ctx.rotate(-0.5 * Math.PI);
-                ctx.scale(1, -1);
-                break;
-              case 8:
-                // 반시계방향 90도 회전
-                ctx.rotate(-0.5 * Math.PI);
-                break;
-              default:
-                break;
-            }
-
-            // 이미지를 중심에서 그리기
-            ctx.drawImage(img, -scaledWidth / 2, -scaledHeight / 2, scaledWidth, scaledHeight);
-
-            console.log("✅ Canvas dimensions:", canvas.width, "x", canvas.height);
-
-            canvas.toBlob((blob) => {
+          canvas.toBlob(
+            (blob) => {
               if (blob && blob.size > 0) {
                 resolve(blob);
               } else {
                 reject(new Error("Canvas blob is empty"));
               }
-            }, 'image/jpeg', 0.9);
-          } catch (error) {
-            console.error("Canvas transformation error:", error);
-            reject(new Error("Canvas transformation failed"));
-          }
-        };
+            },
+            'image/jpeg',
+            0.9
+          );
+        } catch (error) {
+          reject(error);
+        }
+      };
 
-        reader.onerror = () => reject(new Error("File reading failed"));
-        reader.readAsDataURL(file);
-      }).catch((err) => {
-        console.error("Orientation parsing error:", err);
-        reject(new Error("Orientation parsing failed"));
-      });
+      img.onerror = () => reject(new Error("Image load failed"));
+      reader.onerror = () => reject(new Error("File read failed"));
+      reader.readAsDataURL(file);
     });
-  };
+  });
+};
+
 
   const handleFileChange = async (event) => {
     const selectedFile = event.target.files[0];
     if (!selectedFile) return;
 
-    // Reset previous states
+    // Reset states
     setError(null);
     setImagePreview(null);
     setFile(null);
+    setFoodName('');
+    setConfidence(null);
+    setFoodDetails(null);
 
     try {
-      // Validate file type
+      // 파일 타입 검증
       if (!selectedFile.type.startsWith('image/')) {
         throw new Error("Please select a valid image file.");
       }
 
-      // Validate file size (max 10MB)
+      // 파일 크기 검증 (10MB)
       if (selectedFile.size > 10 * 1024 * 1024) {
         throw new Error("Image file is too large. Please select an image smaller than 10MB.");
       }
@@ -203,9 +180,10 @@ const foodfind = () => {
         size: selectedFile.size
       });
 
+      // 이미지 처리
       const resizedBlob = await resizeImage(selectedFile, 800, 800);
 
-      // Create final file
+      // 최종 파일 생성
       const fileName = selectedFile.name ? 
         selectedFile.name.replace(/\.[^/.]+$/, '') + '.jpg' : 
         'upload.jpg';
@@ -220,7 +198,7 @@ const foodfind = () => {
 
       setFile(finalFile);
 
-      // Create preview
+      // 프리뷰 생성
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
