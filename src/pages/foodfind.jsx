@@ -103,8 +103,9 @@ const foodfind = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to get prediction: ${response.status}`);
-      }
+    const text = await response.text();  // 상세 에러 받아보기
+    throw new Error(`Failed to get prediction: ${response.status} - ${text}`);
+  }
 
       const result = await response.json();
       setFoodName(result.class);
