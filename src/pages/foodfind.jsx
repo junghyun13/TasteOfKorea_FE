@@ -21,7 +21,7 @@ const foodfind = () => {
       reader.onload = (e) => {
         const view = new DataView(e.target.result);
         if (view.getUint16(0, false) !== 0xFFD8) {
-          resolve(1); // 기본값 1로 변경
+          resolve(1);
           return;
         }
         const length = view.byteLength;
@@ -78,32 +78,32 @@ const foodfind = () => {
             
             let { width, height } = img;
             
-            // 회전에 따른 캔버스 크기 결정
-            let canvasWidth = width;
-            let canvasHeight = height;
+            // orientation에 따른 최종 캔버스 크기 결정
+            let finalWidth = width;
+            let finalHeight = height;
             
-            // orientation 5,6,7,8은 90도 회전이므로 width와 height를 바꿔야 함
+            // 90도 회전이 필요한 경우 width와 height를 바꿈
             if (orientation >= 5 && orientation <= 8) {
-              canvasWidth = height;
-              canvasHeight = width;
+              finalWidth = height;
+              finalHeight = width;
             }
 
             // 최대 크기에 맞춰 비율 계산
-            const ratio = Math.min(maxWidth / canvasWidth, maxHeight / canvasHeight);
+            const ratio = Math.min(maxWidth / finalWidth, maxHeight / finalHeight);
             if (ratio < 1) {
-              canvasWidth = Math.round(canvasWidth * ratio);
-              canvasHeight = Math.round(canvasHeight * ratio);
+              finalWidth = Math.round(finalWidth * ratio);
+              finalHeight = Math.round(finalHeight * ratio);
             }
 
-            canvas.width = canvasWidth;
-            canvas.height = canvasHeight;
+            canvas.width = finalWidth;
+            canvas.height = finalHeight;
 
-            // 캔버스 초기화 (검정색 배경 제거)
+            // 캔버스 초기화 (흰색 배경)
             ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+            ctx.fillRect(0, 0, finalWidth, finalHeight);
 
             // 캔버스 중심으로 이동
-            ctx.translate(canvasWidth / 2, canvasHeight / 2);
+            ctx.translate(finalWidth / 2, finalHeight / 2);
 
             // orientation에 따른 변환 적용
             switch (orientation) {
@@ -133,15 +133,16 @@ const foodfind = () => {
                 break;
             }
 
-            // 이미지 그리기 (중심에서 그리기)
-            const drawWidth = canvasWidth;
-            const drawHeight = canvasHeight;
-            
-            // orientation 5,6,7,8의 경우 그리기 크기도 바꿔야 함
+            // 이미지 그리기
+            // 90도 회전이 필요한 경우 원본 크기 사용
             if (orientation >= 5 && orientation <= 8) {
-              ctx.drawImage(img, -drawHeight / 2, -drawWidth / 2, drawHeight, drawWidth);
+              const scaledWidth = height * ratio;
+              const scaledHeight = width * ratio;
+              ctx.drawImage(img, -scaledWidth / 2, -scaledHeight / 2, scaledWidth, scaledHeight);
             } else {
-              ctx.drawImage(img, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+              const scaledWidth = width * ratio;
+              const scaledHeight = height * ratio;
+              ctx.drawImage(img, -scaledWidth / 2, -scaledHeight / 2, scaledWidth, scaledHeight);
             }
 
             // blob으로 변환
