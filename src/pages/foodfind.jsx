@@ -14,24 +14,29 @@ const foodfind = () => {
   const [allergyIngredients, setAllergyIngredients] = useState([]);
   const navigate = useNavigate();
 
-  // Fix EXIF orientation issues
+  // EXIF orientation 감지
   const getOrientation = (file) => {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const view = new DataView(e.target.result);
         if (view.getUint16(0, false) !== 0xFFD8) {
-          resolve(-2);
+          resolve(1); // 기본값 1로 변경
+          return;
         }
         const length = view.byteLength;
         let offset = 2;
         while (offset < length) {
-          if (view.getUint16(offset + 2, false) <= 8) resolve(-1);
+          if (view.getUint16(offset + 2, false) <= 8) {
+            resolve(1);
+            return;
+          }
           const marker = view.getUint16(offset, false);
           offset += 2;
           if (marker === 0xFFE1) {
             if (view.getUint32(offset += 2, false) !== 0x45786966) {
-              resolve(-1);
+              resolve(1);
+              return;
             }
             const little = view.getUint16(offset += 6, false) === 0x4949;
             offset += view.getUint32(offset + 4, little);
@@ -40,6 +45,7 @@ const foodfind = () => {
             for (let i = 0; i < tags; i++) {
               if (view.getUint16(offset + (i * 12), little) === 0x0112) {
                 resolve(view.getUint16(offset + (i * 12) + 8, little));
+                return;
               }
             }
           } else if ((marker & 0xFF00) !== 0xFF00) {
@@ -48,40 +54,13 @@ const foodfind = () => {
             offset += view.getUint16(offset, false);
           }
         }
-        resolve(-1);
+        resolve(1);
       };
       reader.readAsArrayBuffer(file);
     });
   };
 
-  const resetTransform = (ctx, width, height, orientation) => {
-    switch (orientation) {
-      case 2:
-        ctx.transform(-1, 0, 0, 1, width, 0);
-        break;
-      case 3:
-        ctx.transform(-1, 0, 0, -1, width, height);
-        break;
-      case 4:
-        ctx.transform(1, 0, 0, -1, 0, height);
-        break;
-      case 5:
-        ctx.transform(0, 1, 1, 0, 0, 0);
-        break;
-      case 6:
-        ctx.transform(0, 1, -1, 0, height, 0);
-        break;
-      case 7:
-        ctx.transform(0, -1, -1, 0, height, width);
-        break;
-      case 8:
-        ctx.transform(0, -1, 1, 0, 0, width);
-        break;
-      default:
-        break;
-    }
-  };
-
+  // 이미지 리사이즈 및 회전 처리
   const resizeImage = (file, maxWidth, maxHeight) => {
     return new Promise((resolve, reject) => {
       getOrientation(file).then((orientation) => {
@@ -95,112 +74,111 @@ const foodfind = () => {
         img.onload = () => {
           try {
             const canvas = document.createElement("canvas");
-            let { width, height } = img;
-
-            // Handle orientation for canvas size
-            if (orientation > 4 && orientation < 9) {
-              [width, height] = [height, width];
-            }
-
-            // Calculate resize dimensions
-            if (width > height) {
-              if (width > maxWidth) {
-                height = Math.round(height * (maxWidth / width));
-                width = maxWidth;
-              }
-            } else {
-              if (height > maxHeight) {
-                width = Math.round(width * (maxHeight / height));
-                height = maxHeight;
-              }
-            }
-
-            canvas.width = width;
-            canvas.height = height;
             const ctx = canvas.getContext("2d");
             
-            // Apply orientation transformation
-            if (orientation > 1) {
-              resetTransform(ctx, width, height, orientation);
-            }
+            let { width, height } = img;
             
-            ctx.drawImage(img, 0, 0, width, height);
+            // 회전에 따른 캔버스 크기 결정
+            let canvasWidth = width;
+            let canvasHeight = height;
+            
+            // orientation 5,6,7,8은 90도 회전이므로 width와 height를 바꿔야 함
+            if (orientation >= 5 && orientation <= 8) {
+              canvasWidth = height;
+              canvasHeight = width;
+            }
 
-            // Method 1: Try toBlob with JPEG
+            // 최대 크기에 맞춰 비율 계산
+            const ratio = Math.min(maxWidth / canvasWidth, maxHeight / canvasHeight);
+            if (ratio < 1) {
+              canvasWidth = Math.round(canvasWidth * ratio);
+              canvasHeight = Math.round(canvasHeight * ratio);
+            }
+
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+
+            // 캔버스 초기화 (검정색 배경 제거)
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+            // 캔버스 중심으로 이동
+            ctx.translate(canvasWidth / 2, canvasHeight / 2);
+
+            // orientation에 따른 변환 적용
+            switch (orientation) {
+              case 2:
+                ctx.scale(-1, 1);
+                break;
+              case 3:
+                ctx.rotate(Math.PI);
+                break;
+              case 4:
+                ctx.rotate(Math.PI);
+                ctx.scale(-1, 1);
+                break;
+              case 5:
+                ctx.rotate(Math.PI / 2);
+                ctx.scale(-1, 1);
+                break;
+              case 6:
+                ctx.rotate(Math.PI / 2);
+                break;
+              case 7:
+                ctx.rotate(-Math.PI / 2);
+                ctx.scale(-1, 1);
+                break;
+              case 8:
+                ctx.rotate(-Math.PI / 2);
+                break;
+            }
+
+            // 이미지 그리기 (중심에서 그리기)
+            const drawWidth = canvasWidth;
+            const drawHeight = canvasHeight;
+            
+            // orientation 5,6,7,8의 경우 그리기 크기도 바꿔야 함
+            if (orientation >= 5 && orientation <= 8) {
+              ctx.drawImage(img, -drawHeight / 2, -drawWidth / 2, drawHeight, drawWidth);
+            } else {
+              ctx.drawImage(img, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+            }
+
+            // blob으로 변환
             canvas.toBlob((blob) => {
               if (blob && blob.size > 0) {
-                console.log("✅ toBlob with JPEG successful");
+                console.log("✅ Image processing successful");
                 resolve(blob);
               } else {
-                // Method 2: Try toBlob with PNG
+                // PNG로 재시도
                 canvas.toBlob((blob) => {
                   if (blob && blob.size > 0) {
-                    console.log("✅ toBlob with PNG successful");
                     resolve(blob);
                   } else {
-                    // Method 3: DataURL fallback
-                    console.warn("⚠️ toBlob failed, trying dataURL fallback");
-                    try {
-                      const dataURL = canvas.toDataURL('image/jpeg', 0.9);
-                      if (!dataURL || dataURL === 'data:,') {
-                        throw new Error("DataURL generation failed");
-                      }
-                      fetch(dataURL)
-                        .then(res => res.blob())
-                        .then(blob => {
-                          if (blob.size === 0) {
-                            throw new Error("DataURL fallback produced empty blob");
-                          }
-                          console.log("✅ DataURL fallback successful");
-                          resolve(blob);
-                        })
-                        .catch(() => {
-                          // Method 4: Manual blob creation
-                          console.warn("⚠️ DataURL failed, trying manual blob creation");
-                          const imageData = ctx.getImageData(0, 0, width, height);
-                          const tempCanvas = document.createElement("canvas");
-                          tempCanvas.width = width;
-                          tempCanvas.height = height;
-                          const tempCtx = tempCanvas.getContext("2d");
-                          tempCtx.putImageData(imageData, 0, 0);
-                          
-                          tempCanvas.toBlob((blob) => {
-                            if (blob && blob.size > 0) {
-                              console.log("✅ Manual blob creation successful");
-                              resolve(blob);
-                            } else {
-                              reject(new Error("All image processing methods failed"));
-                            }
-                          }, 'image/jpeg', 0.8);
-                        });
-                    } catch (dataURLError) {
-                      reject(new Error("Failed to process image. Please try saving the image to your device first and then upload it again."));
-                    }
+                    reject(new Error("Failed to process image"));
                   }
                 }, 'image/png');
               }
             }, 'image/jpeg', 0.9);
             
-          } catch (canvasError) {
-            console.error("❌ Canvas processing error:", canvasError);
-            reject(new Error("Failed to process image. Please try saving the image to your device first and then upload it again."));
+          } catch (error) {
+            console.error("❌ Canvas processing error:", error);
+            reject(new Error("Failed to process image"));
           }
         };
 
-        img.onerror = (imgError) => {
-          console.error("❌ Image load error:", imgError);
-          reject(new Error("Failed to load image. Please check if the image file is valid."));
+        img.onerror = () => {
+          reject(new Error("Failed to load image"));
         };
 
-        reader.onerror = (readerError) => {
-          console.error("❌ FileReader error:", readerError);
-          reject(new Error("Failed to read image file. Please try selecting the image again."));
+        reader.onerror = () => {
+          reject(new Error("Failed to read image file"));
         };
 
         reader.readAsDataURL(file);
       }).catch(error => {
         console.error("❌ Orientation detection error:", error);
-        reject(new Error("Image processing failed. Please try with a different image."));
+        reject(new Error("Image processing failed"));
       });
     });
   };
@@ -233,15 +211,12 @@ const foodfind = () => {
 
       const resizedBlob = await resizeImage(selectedFile, 800, 800);
 
-      // Determine MIME type - force JPEG for better compatibility
-      const mimeType = 'image/jpeg';
-      
-      // Create final file with consistent naming
+      // Create final file
       const fileName = selectedFile.name ? 
         selectedFile.name.replace(/\.[^/.]+$/, '') + '.jpg' : 
         'upload.jpg';
       
-      const finalFile = new File([resizedBlob], fileName, { type: mimeType });
+      const finalFile = new File([resizedBlob], fileName, { type: 'image/jpeg' });
 
       console.log("✅ Processed file:", {
         name: finalFile.name,
