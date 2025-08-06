@@ -119,11 +119,15 @@ const Maptest = ({ currentMyLocation, restaurantData }) => {
           }
 
           const howToGoButton = document.querySelector('.howToGoButton');
-          if (howToGoButton) {
-            howToGoButton.addEventListener('click', () => {
-              getRoute(currentMyLocation, restaurant);
-            });
-          }
+if (howToGoButton) {
+  const newHowToGoButton = howToGoButton.cloneNode(true);
+  howToGoButton.replaceWith(newHowToGoButton);
+
+  newHowToGoButton.addEventListener('click', () => {
+    getRoute(currentMyLocation, restaurant);
+  });
+}
+
           const orderButton = document.querySelector('.orderButton');
   if (orderButton) {
     const newOrderButton = orderButton.cloneNode(true);
@@ -136,12 +140,16 @@ const Maptest = ({ currentMyLocation, restaurantData }) => {
         .catch(err => alert('order fail: ' + err));
     });
   }
-          const foodDetailButton = document.querySelector('.foodDetailButton');
+        const foodDetailButton = document.querySelector('.foodDetailButton');
 if (foodDetailButton) {
-  foodDetailButton.addEventListener('click', () => {
+  const newFoodDetailButton = foodDetailButton.cloneNode(true);
+  foodDetailButton.replaceWith(newFoodDetailButton);
+
+  newFoodDetailButton.addEventListener('click', () => {
     navigate(`/fooddetail/${restaurant.recipeId}`);
   });
 }
+
 
         }, 100);
       });
