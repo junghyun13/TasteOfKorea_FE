@@ -125,14 +125,17 @@ const Maptest = ({ currentMyLocation, restaurantData }) => {
             });
           }
           const orderButton = document.querySelector('.orderButton');
-          if (orderButton) {
-            orderButton.addEventListener('click', () => {
-              const url = `${import.meta.env.VITE_BACKEND_API_URL}/restaurants/order?restaurantName=${restaurant.englishName}&recipeId=${restaurant.recipeId}`;
-              fetch(url, { method: 'POST' })
-                .then(() => alert('Success order'))
-                .catch(err => alert('order fail: ' + err));
-            });
-          }
+  if (orderButton) {
+    const newOrderButton = orderButton.cloneNode(true);
+    orderButton.replaceWith(newOrderButton);
+
+    newOrderButton.addEventListener('click', () => {
+      const url = `${import.meta.env.VITE_BACKEND_API_URL}/restaurants/order?restaurantName=${restaurant.englishName}&recipeId=${restaurant.recipeId}`;
+      fetch(url, { method: 'POST' })
+        .then(() => alert('Success order'))
+        .catch(err => alert('order fail: ' + err));
+    });
+  }
           const foodDetailButton = document.querySelector('.foodDetailButton');
 if (foodDetailButton) {
   foodDetailButton.addEventListener('click', () => {
