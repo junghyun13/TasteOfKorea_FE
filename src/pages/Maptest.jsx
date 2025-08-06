@@ -158,6 +158,14 @@ if (foodDetailButton) {
     map.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
   }, [isNaverLoaded, currentMyLocation, restaurantData]);
 
+  if (!isNaverLoaded || !window.naver || !currentMyLocation.lat) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center text-orange-600 text-xl">
+        Loading the map, please wait...
+      </div>
+    );
+  }
+
   const getRoute = async (currentLocation, restaurant) => {
     const start = [currentLocation.lng, currentLocation.lat];
     const end = [restaurant.longitude, restaurant.latitude];
